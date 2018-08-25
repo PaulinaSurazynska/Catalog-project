@@ -1,0 +1,27 @@
+{% extends "main.html" %}
+{% block content %}
+{% include "header.html" %}
+<div class="row">
+  <div class="col">
+    <a class="btn btn-primary btn-link text-right" href='{{url_for('NewCountry')}}' role="button">Add new country</a>
+    {% with messages= get_flashed_messages() %}
+    {% if messages %}
+      {% for message in messages%}
+      <div class="alert alert-success" role="alert">
+        {{message}}
+      </div>
+      {% endfor %}
+      {% endif %}
+      {% endwith %}
+    {% for country in countries %}
+    <div class="jumbotron">
+      <h1 class="display-4">
+        <a href='{{url_for('SingleCountry', country_id = country.id) }}'>
+          {{country.name}}
+        </a>
+      </h1>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

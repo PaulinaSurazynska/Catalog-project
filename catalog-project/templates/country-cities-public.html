@@ -1,0 +1,29 @@
+{% extends "main.html" %}
+{% block atom_feed %}
+{% endblock %}
+{% block content %}
+{% include "header.html" %}
+  <h1>{{country.name}}</h1>
+  {% with messages= get_flashed_messages() %}
+  {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-success" role="alert">
+      {{message}}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+  <div class="row">
+    {% for city in cities %}
+    <div class="col col-md-4">
+      <div class="card text-center" style="width: 18rem;">
+        <div class="card-body">
+          <h5 class="card-title">{{city.name}}</h5>
+          <p class="card-text">{{city.description}}</p>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+{% endblock %}

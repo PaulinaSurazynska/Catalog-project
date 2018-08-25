@@ -1,0 +1,38 @@
+{% extends "main.html" %}
+{% block atom_feed %}
+{% endblock %}
+{% block content %}
+{% include "header.html" %}
+  <div class="jumbotron">
+    <h1>{{country.name}}</h1>
+    <hr class="my-4">
+    <a class="btn btn-primary btn-link btn-outline-primary" href='{{url_for('DeleteCountry', country_id = country.id)}}' role="button">Delete</a>
+    <a class="btn btn-primary btn" href='{{url_for('EditCountry', country_id = country.id)}}' role="button">Edit</a>
+  </div>
+  {% with messages= get_flashed_messages() %}
+  {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-success" role="alert">
+      {{message}}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+  <div class="row">
+    {% for city in cities %}
+    <div class="col col-md-4">
+      <div class="card text-center" style="width: 18rem;">
+        <div class="card-body">
+          <h5 class="card-title">{{city.name}}</h5>
+          <p class="card-text">{{city.description}}</p>
+          <a class="btn btn-primary btn-link btn-outline-primary" href='{{url_for('DeleteCity', country_id = country.id, city_id = city.id)}}'>Delete</a>
+          <a class="btn btn-primary" href='{{url_for('EditCity', country_id = country.id, city_id = city.id)}}'>Edit</a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <a class="btn btn-primary btn-block" href='{{url_for('AddNewCity', country_id = country.id)}}'role="button">Add new city</a>
+
+{% endblock %}

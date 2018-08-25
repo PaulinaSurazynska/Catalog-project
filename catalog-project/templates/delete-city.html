@@ -1,0 +1,13 @@
+{% extends "main.html" %}
+{% block content %}
+{% include "header.html" %}
+<div class="row justify-content-md-center">
+  <div class="col col col-lg-5">
+    <h1> Are you sure you want to delete {{city.name}}? </h1>
+    <form action="#" method = 'post'>
+      <a role="button" class="btn btn-primary btn-link btn-outline-primary" href='{{url_for('SingleCountry', country_id=country_id)}}'>Cancel</a>
+      <button role="submit" class="btn btn-primary">Delete</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

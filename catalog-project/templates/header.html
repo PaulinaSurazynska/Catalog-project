@@ -1,0 +1,17 @@
+
+<nav class="navbar navbar-light bg-light">
+	<a href="{{url_for('CountryList')}}">
+		<span aria-hidden="true">
+			<i class="fas fa-home"></i>Show All Countries
+		</span>
+	</a>
+	<ul class="nav justify-content-end">
+	  <li class="nav-item">
+			{%if 'username' not in session %}
+	    	<a class="nav-link active" href="{{url_for('showLogin')}}">Click Here to Login</a>
+				{% else %}
+				<a href="{{url_for('disconnect')}}">Logout</a>
+			{% endif %}
+	  </li>
+	</ul>
+</nav>
