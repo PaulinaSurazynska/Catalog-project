@@ -6,7 +6,11 @@ from sqlalchemy import create_engine
 
 Base = declarative_base()
 
+
 class User(Base):
+    """
+    Registered user information is stored in db
+    """
     __tablename__ = 'user'
 
     id = Column(Integer, primary_key=True)
@@ -14,7 +18,9 @@ class User(Base):
     email = Column(String(250), nullable=False)
     picture = Column(String(250))
 
+
 class Country(Base):
+    """Class to create the table 'country'."""
     __tablename__ = 'country'
 
     name = Column(String(250), nullable=False)
@@ -32,12 +38,13 @@ class Country(Base):
 
 
 class City(Base):
+    """Class to create the table 'city'."""
     __tablename__ = 'city'
 
-    name =Column(String(80), nullable=False)
+    name = Column(String(80), nullable=False)
     id = Column(Integer, primary_key=True)
     description = Column(String(250))
-    country_id = Column(Integer,ForeignKey('country.id'))
+    country_id = Column(Integer, ForeignKey('country.id'))
     country = relationship(Country)
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship(User)

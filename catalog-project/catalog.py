@@ -142,7 +142,8 @@ def gdisconnect():
     access_token = login_session.get('access_token')
     if access_token is None:
         print 'Access Token is None'
-        response = make_response(json.dumps('Current user not connected.'), 401)
+        response = make_response(json.dumps(
+            'Current user not connected.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
     print 'In gdisconnect access token is %s', access_token
@@ -173,15 +174,13 @@ def fbconnect():
         return response
     access_token = request.data
     print "access token received %s " % access_token
-
     app_id = json.loads(open('fb_client_secret.json', 'r').read())[
         'web']['app_id']
     app_secret = json.loads(
         open('fb_client_secret.json', 'r').read())['web']['app_secret']
-    url = 'https://graph.facebook.com/oauth/access_token?grant_type=fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token=%s' % (
-        app_id,
-        app_secret,
-        access_token)
+    url = ("https://graph.facebook.com/oauth/access_token?grant_type="
+           "fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token="
+           "%s" % (app_id, app_secret, access_token))
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
 
@@ -189,7 +188,8 @@ def fbconnect():
     userinfo_url = "https://graph.facebook.com/v2.8/me"
     token = result.split(',')[0].split(':')[1].replace('"', '')
 
-    url = 'https://graph.facebook.com/v2.8/me?access_token=%s&fields=name,id,email' % token
+    url = ("https://graph.facebook.com/v2.8/me?access_token="
+           "%s&fields=name,id,email" % token)
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
     data = json.loads(result)
@@ -202,7 +202,8 @@ def fbconnect():
     login_session['access_token'] = token
 
     # Get user picture
-    url = 'https://graph.facebook.com/v2.8/me/picture?access_token=%s&redirect=0&height=200&width=200' % token
+    url = ("https://graph.facebook.com/v2.8/me/picture?access_token="
+           "%s&redirect=0&height=200&width=200" % token)
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
     data = json.loads(result)
@@ -262,7 +263,8 @@ def disconnect():
 #     facebook_id = login_session['facebook_id']
 #     # The access token must me included to successfully logout
 #     access_token = login_session['access_token']
-#     url = 'https://graph.facebook.com/%s/permissions?access_token=%s' % (facebook_id,access_token)
+#     url = ('https://graph.facebook.com/%s/permissions?access_token=%s'
+#     % (facebook_id,access_token))
 #     h = httplib2.Http()
 #     result = h.request(url, 'DELETE')[1]
 #     return "you have been logged out"
@@ -278,7 +280,7 @@ def ContriesJSON():
 # Making an API endpoint (GET = request) for city per country
 @app.route('/country/<int:country_id>/JSON')
 def CitiesJSON(country_id):
-    country = session.query(Country).filter_by(id=country_id).one()
+    country = session.query(Country).filter_by(id=country_id).one_or_none()
     cities = session.query(City).filter_by(country=country).all()
     return jsonify(Cities=[city.serialize for city in cities])
 
@@ -312,10 +314,11 @@ def NewCountry():
 
 @app.route('/country/<int:country_id>')
 def SingleCountry(country_id):
-    country = session.query(Country).filter_by(id=country_id).one()
+    country = session.query(Country).filter_by(id=country_id).one_or_none()
     cities = session.query(City).filter_by(country_id=country_id).all()
     creator = getUserInfo(country.user_id)
-    if 'username' not in login_session or creator.id != login_session['user_id']:
+    if 'username' not in login_session or \
+            creator.id != login_session['user_id']:
         return render_template(
             'country-cities-public.html',
             country=country,
@@ -334,7 +337,9 @@ def SingleCountry(country_id):
 @app.route('/country/<int:country_id>/delete', methods=['GET', 'POST'])
 def DeleteCountry(country_id):
     countryToDelete = session.query(Country).filter_by(id=country_id).one()
-    if 'username' not in login_session:
+    creator = getUserInfo(countryToDelete.user_id)
+    if 'username' not in login_session or \
+            creator.id != login_session['user_id']:
         return redirect('/login')
     if request.method == 'POST':
         session.delete(countryToDelete)
@@ -348,8 +353,11 @@ def DeleteCountry(country_id):
 # edit country
 @app.route('/country/<int:country_id>/edit', methods=['GET', 'POST'])
 def EditCountry(country_id):
-    editedCountry = session.query(Country).filter_by(id=country_id).one()
-    if 'username' not in login_session:
+    editedCountry = session.query(Country).filter_by(
+                                            id=country_id).one_or_none()
+    creator = getUserInfo(country.user_id)
+    if 'username' not in login_session or \
+            creator.id != login_session['user_id']:
         return redirect('/login')
     if request.method == 'POST':
         if request.form['name']:
@@ -365,7 +373,9 @@ def EditCountry(country_id):
 # add new City
 @app.route('/country/<int:country_id>/new', methods=['GET', 'POST'])
 def AddNewCity(country_id):
-    if 'username' not in login_session:
+    creator = getUserInfo(country.user_id)
+    if 'username' not in login_session or \
+            creator.id != login_session['user_id']:
         return redirect('/login')
     if request.method == 'POST':
         newCity = City(
@@ -386,9 +396,11 @@ def AddNewCity(country_id):
     '/country/<int:country_id>/city/<int:city_id>/delete',
     methods=['GET', 'POST'])
 def DeleteCity(country_id, city_id):
-    country = session.query(Country).filter_by(id=country_id).one()
-    cityToDelete = session.query(City).filter_by(id=city_id).one()
-    if 'username' not in login_session:
+    country = session.query(Country).filter_by(id=country_id).one_or_none()
+    cityToDelete = session.query(City).filter_by(id=city_id).one_or_none()
+    creator = getUserInfo(country.user_id)
+    if 'username' not in login_session or \
+            creator.id != login_session['user_id']:
         return redirect('/login')
     if request.method == 'POST':
         session.delete(cityToDelete)
@@ -407,9 +419,11 @@ def DeleteCity(country_id, city_id):
     '/country/<int:country_id>/city/<int:city_id>/edit',
     methods=['GET', 'POST'])
 def EditCity(country_id, city_id):
-    country = session.query(Country).filter_by(id=country_id).one()
-    editedCity = session.query(City).filter_by(id=city_id).one()
-    if 'username' not in login_session:
+    country = session.query(Country).filter_by(id=country_id).one_or_none()
+    editedCity = session.query(City).filter_by(id=city_id).one_or_none()
+    creator = getUserInfo(country.user_id)
+    if 'username' not in login_session or \
+            creator.id != login_session['user_id']:
         return redirect('/login')
     if request.method == 'POST':
         if request.form['name']:
@@ -429,13 +443,13 @@ def EditCity(country_id, city_id):
 
 # get user info functions
 def getUserInfo(user_id):
-    user = session.query(User).filter_by(id=user_id).one()
+    user = session.query(User).filter_by(id=user_id).one_or_none()
     return user
 
 
 def getUserID(email):
     try:
-        user = session.query(User).filter_by(email=email).one()
+        user = session.query(User).filter_by(email=email).one_or_none()
         return user.id
     except:
         return None
@@ -448,7 +462,8 @@ def createUser(login_session):
         picture=login_session['picture'])
     session.add(newUser)
     session.commit()
-    user = session.query(User).filter_by(email=login_session['email']).one()
+    user = session.query(User).filter_by(
+        email=login_session['email']).one_or_none()
     # returns id of new Created user
     return user.id
 
