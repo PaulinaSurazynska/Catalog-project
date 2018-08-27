@@ -12,12 +12,19 @@ from flask import make_response
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy import create_engine, asc
 from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy.exc import SQLAlchemyError
 from database_setup import Base, Country, City, User
 
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 
 app = Flask(__name__)
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
 
 CLIENT_ID = json.loads(
     open('google_client_secret.json', 'r').read())['web']['client_id']
@@ -239,10 +246,7 @@ def disconnect():
     if 'provider' in login_session:
         if login_session['provider'] == 'google':
             gdisconnect()
-            # del login_session['gplus_id']
-            # del login_session['credentials']
         if login_session['provider'] == 'facebook':
-            # fbdisconnect()
             del login_session['facebook_id']
 
         # Reset the user's session.
@@ -256,18 +260,6 @@ def disconnect():
     else:
         flash("You were not logged in")
         return redirect(url_for('CountryList'))
-
-# not in use
-# @app.route('/fbdisconnect')
-# def fbdisconnect():
-#     facebook_id = login_session['facebook_id']
-#     # The access token must me included to successfully logout
-#     access_token = login_session['access_token']
-#     url = ('https://graph.facebook.com/%s/permissions?access_token=%s'
-#     % (facebook_id,access_token))
-#     h = httplib2.Http()
-#     result = h.request(url, 'DELETE')[1]
-#     return "you have been logged out"
 
 
 # Making an API endpoint (GET = request) for country list
@@ -283,6 +275,13 @@ def CitiesJSON(country_id):
     country = session.query(Country).filter_by(id=country_id).one_or_none()
     cities = session.query(City).filter_by(country=country).all()
     return jsonify(Cities=[city.serialize for city in cities])
+
+
+# Making an API endpoint (GET = request) for single city
+@app.route('/country/<int:country_id>/city/<int:city_id>/JSON')
+def SingleCityJSON(country_id, city_id):
+    city = session.query(City).filter_by(id=city_id).one_or_none()
+    return jsonify(city=city.serialize)
 
 
 @app.route('/')
@@ -317,6 +316,7 @@ def SingleCountry(country_id):
     country = session.query(Country).filter_by(id=country_id).one_or_none()
     cities = session.query(City).filter_by(country_id=country_id).all()
     creator = getUserInfo(country.user_id)
+
     if 'username' not in login_session or \
             creator.id != login_session['user_id']:
         return render_template(
@@ -355,7 +355,7 @@ def DeleteCountry(country_id):
 def EditCountry(country_id):
     editedCountry = session.query(Country).filter_by(
                                             id=country_id).one_or_none()
-    creator = getUserInfo(country.user_id)
+    creator = getUserInfo(editedCountry.user_id)
     if 'username' not in login_session or \
             creator.id != login_session['user_id']:
         return redirect('/login')
@@ -373,6 +373,7 @@ def EditCountry(country_id):
 # add new City
 @app.route('/country/<int:country_id>/new', methods=['GET', 'POST'])
 def AddNewCity(country_id):
+    country = session.query(Country).filter_by(id=country_id).one_or_none()
     creator = getUserInfo(country.user_id)
     if 'username' not in login_session or \
             creator.id != login_session['user_id']:
@@ -451,7 +452,7 @@ def getUserID(email):
     try:
         user = session.query(User).filter_by(email=email).one_or_none()
         return user.id
-    except:
+    except SQLAlchemyError:
         return None
 
 
