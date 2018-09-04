@@ -278,6 +278,7 @@ def DeleteCountry(country_id):
             creator.id != login_session['user_id']:
         return redirect('/login')
     if request.method == 'POST':
+        cities = session.query(City).filter_by(country_id=country_id).delete()
         session.delete(countryToDelete)
         session.commit()
         flash('country deleted!')
