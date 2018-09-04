@@ -1,4 +1,5 @@
 import requests
+import os
 import httplib2
 import json
 import random
@@ -36,8 +37,7 @@ CLIENT_ID = json.loads(
 APPLICATION_NAME = "catalog"
 
 engine = create_engine(
-    'postgresql://catalog:welcome01@localhost/catalog',
-    connect_args={'check_same_thread': False}, echo=True)
+    'postgresql://catalog:yourpassword@localhost/catalog')
 Base.metadata.bind = engine
 
 DBSession = scoped_session(sessionmaker(bind=engine))
