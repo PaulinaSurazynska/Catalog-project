@@ -61,5 +61,5 @@ class City(Base):
 
 
 engine = create_engine(
-    'postgresql://catalog:yourpassword@localhost/catalog')
+    'postgresql://catalog:welcome01@localhost/catalog')
 Base.metadata.create_all(engine)
