@@ -19,6 +19,7 @@ from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 
 app = Flask(__name__)
+app.secret_key = 'super_secret_key'
 
 
 @app.errorhandler(404)
@@ -26,12 +27,16 @@ def page_not_found(e):
     return render_template('404.html'), 404
 
 
+# Load the Google Sign-in API Client ID.
+APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 CLIENT_ID = json.loads(
-    open('google_client_secret.json', 'r').read())['web']['client_id']
+    open(APP_ROOT + '/google_client_secret.json', 'r')
+    .read())['web']['client_id']
+
 APPLICATION_NAME = "catalog"
 
 engine = create_engine(
-    'sqlite:///catalog.db',
+    'postgresql://catalog:welcome01@localhost/catalog',
     connect_args={'check_same_thread': False}, echo=True)
 Base.metadata.bind = engine
 
@@ -61,7 +66,7 @@ def gconnect():
 
     try:
         oauth_flow = flow_from_clientsecrets(
-                'google_client_secret.json',
+                APP_ROOT + '/google_client_secret.json',
                 scope='')
         oauth_flow.redirect_uri = 'postmessage'
         credentials = oauth_flow.step2_exchange(code)
@@ -140,7 +145,6 @@ def gconnect():
             -webkit-border-radius: 150px; \
             -moz-border-radius: 150px;"> '
     flash("you are now logged in as %s" % login_session['username'])
-    print "done!"
     return output
 
 
@@ -470,6 +474,5 @@ def createUser(login_session):
 
 
 if __name__ == '__main__':
-    app.secret_key = 'super_secret_key'
     app.debug = True
     app.run(host='0.0.0.0', port=5000)
